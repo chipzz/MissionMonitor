@@ -1,0 +1,10 @@
+## Interface: 100105
+## Title: Mission Monitor
+## Notes: Mission Monitor
+## Author: Chipzz
+## Version: 0.1
+## DefaultState: enabled
+## SavedVariables: MissionMonitorItems
+## SavedVariablesPerCharacter: MissionMonitorCharacterItems
+
+MissionMonitor.xml
