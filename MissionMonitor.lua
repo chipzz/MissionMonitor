@@ -28,6 +28,7 @@ local function LinkAddIcon(link, icon, height, width)
 	return gsub(link, "|h", format("|h|T%s:%i:%i|t", icon, height, width or height), 1)
 end
 
+local mission_seen = {}
 local function MissionMonitor_CheckMission(mission, alert_system, message)
 	local mission_wanted_items = {}
 	for _, reward in ipairs(mission.rewards) do
@@ -54,11 +55,16 @@ local function MissionMonitor_CheckMission(mission, alert_system, message)
 				return
 			end
 		end
+		local mission_link = C_Garrison.GetMissionLink(mission.missionID)
+		if not mission_link then
+			mission_seen[mission.missionID] = nil
+			return
+		end
 		mission_item_links = nil
 		local link_count = #links
 		local last_link = links[link_count]
 		links[link_count] = nil
-		print(format(message, C_Garrison.GetMissionLink(mission.missionID), strjoin(", ", unpack(links)) .. (link_count > 1 and " and " or "") .. last_link))
+		print(format(message, mission_link, strjoin(", ", unpack(links)) .. (link_count > 1 and " and " or "") .. last_link))
 	end
 	for i, item in ipairs(mission_wanted_items) do
 		local link = select(2, GetItemInfo(item))
@@ -86,7 +92,6 @@ local function MissionMonitor_CheckAvailableMission(mission)
 	MissionMonitor_CheckMission(mission, GarrisonRandomMissionAlertSystem, "%s is available with wanted reward %s")
 end
 
-local mission_seen = {}
 local follower_types = {}
 local function MissionMonitor_CheckMissions(followerTypeID)
 	follower_types[followerTypeID] = 1
@@ -152,6 +157,7 @@ MissionMonitorOptionsMixin = {}
 
 function MissionMonitorOptionsMixin:OnLoad()
 	InterfaceOptions_AddCategory(self)
+	MissionMonitorListMixin = nil
 	MissionMonitorOptionsMixin = nil
 	self.OnLoad = nil
 end
