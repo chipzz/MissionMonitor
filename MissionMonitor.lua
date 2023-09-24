@@ -101,7 +101,9 @@ local function MissionMonitor_CheckMissions(followerTypeID)
 			MissionMonitor_CheckCompleteMission(mission)
 		end
 	end
-	for _, mission in ipairs(C_Garrison.GetAvailableMissions(followerTypeID)) do
+	local available_missions = C_Garrison.GetAvailableMissions(followerTypeID)
+	if not available_missions then return end
+	for _, mission in ipairs(available_missions) do
 		if not mission_seen[mission.missionID] then
 			mission_seen[mission.missionID] = 1
 			MissionMonitor_CheckAvailableMission(mission)
