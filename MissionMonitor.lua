@@ -72,6 +72,7 @@ local function MissionMonitor_CheckMission(mission, alert_system, message)
 			mission_item_links[item] = link
 		else
 			item_info_add_callback(item, function(item, _, link)
+				if not mission_item_links then return end
 				mission_item_links[item] = link
 				print_mission_rewards()
 			end)
