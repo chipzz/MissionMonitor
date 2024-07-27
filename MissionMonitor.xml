@@ -1,6 +1,33 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
 	<Include file="MissionMonitor.lua" />
 
+	<Frame name="MissionMonitorListLine" virtual="true" propagateHyperlinksToParent="true" mixin="MissionMonitorListLineMixin">
+		<Frames>
+			<Button parentKey="delete">
+				<Anchors>
+					<Anchor point="RIGHT" />
+				</Anchors>
+				<Size x="14" y="14" />
+				<NormalTexture file="Interface\Buttons\UI-MinusButton-UP" />
+				<PushedTexture file="Interface\Buttons\UI-MinusButton-DOWN" />
+				<HighlightTexture file="Interface\Buttons\UI-PlusButton-Hilight" alphaMode="ADD" />
+				<Scripts>
+					<OnClick>self:GetParent():Delete()</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString parentKey="text" inherits="GameFontNormal" justifyH="LEFT" justifyV="MIDDLE">
+					<Anchors>
+						<Anchor point="LEFT" />
+						<Anchor point="RIGHT" relativePoint="LEFT" relativeKey="$parent.delete" />
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+	</Frame>
+
 	<Frame name="MissionMonitorList" hyperlinksEnabled="true" virtual="true" mixin="MissionMonitorListMixin">
 		<Layers>
 			<Layer level="ARTWORK">
@@ -40,25 +67,15 @@
 				</Anchors>
 			</EditBox>
 		</Frames>
-		<Layers>
-			<Layer level="ARTWORK">
-				<FontString parentKey="deletes" inherits="GameFontNormal" justifyH="RIGHT" justifyV="TOP">
-					<Anchors>
-						<Anchor point="TOP" relativePoint="BOTTOM" relativeKey="$parent.add" y="-4" />
-						<Anchor point="RIGHT" />
-					</Anchors>
-				</FontString>
-				<FontString parentKey="lines" inherits="GameFontNormal" justifyH="LEFT" justifyV="TOP">
-					<Anchors>
-						<Anchor point="TOP" relativePoint="BOTTOM" relativeKey="$parent.add" y="-4" />
-						<Anchor point="LEFT" />
-						<Anchor point="RIGHT" relativePoint="LEFT" relativeKey="$parent.deletes" y="-4" />
-					</Anchors>
-				</FontString>
-			</Layer>
-		</Layers>
 		<Scripts>
 			<OnLoad method="OnLoad" />
+			<OnHyperlinkClick>SetItemRef(link, text, button)</OnHyperlinkClick>
+			<OnHyperLinkEnter>
+				GameTooltip:SetOwner(region, "ANCHOR_TOPLEFT", left, bottom)
+				GameTooltip:SetHyperlink(link)
+				GameTooltip:Show()
+			</OnHyperLinkEnter>
+			<OnHyperLinkLeave>GameTooltip:Hide()</OnHyperLinkLeave>
 		</Scripts>
 	</Frame>
 
