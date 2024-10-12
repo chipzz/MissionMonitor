@@ -1,9 +1,10 @@
-## Interface: 110000
+## Interface: 110002
 ## Title: Mission Monitor
 ## Notes: Mission Monitor
 ## Author: Chipzz
-## Version: 0.2
+## Version: 0.2.1
 ## DefaultState: enabled
+## OptionalDeps: MasterPlan
 ## SavedVariables: MissionMonitorItems
 ## SavedVariablesPerCharacter: MissionMonitorCharacterItems
 

@@ -1,4 +1,4 @@
-local addon_name = ...
+local MissionMonitorAddonName = ...
 MissionMonitorItems = {}
 MissionMonitorCharacterItems = {}
 
@@ -28,8 +28,7 @@ local function LinkAddIcon(link, icon, height, width)
 	return gsub(link, "|h", format("|h|T%s:%i:%i|t", icon, height, width or height), 1)
 end
 
-local mission_seen = {}
-local function MissionMonitor_CheckMission(mission, alert_system, message)
+local function MissionMonitor_MissionGetWantedItems(mission)
 	local mission_wanted_items = {}
 	for _, reward in ipairs(mission.rewards) do
 		if wanted_items[reward.itemID] then
@@ -41,6 +40,12 @@ local function MissionMonitor_CheckMission(mission, alert_system, message)
 			mission_wanted_items[#mission_wanted_items + 1] = reward.itemID
 		end
 	end
+	return mission_wanted_items
+end
+
+local mission_seen = {}
+local function MissionMonitor_CheckMission(mission, alert_system, message)
+	local mission_wanted_items = MissionMonitor_MissionGetWantedItems(mission)
 	if #mission_wanted_items == 0 then return end
 
 	alert_system:AddAlert(mission)
@@ -50,7 +55,7 @@ local function MissionMonitor_CheckMission(mission, alert_system, message)
 		for _, item in pairs(mission_wanted_items) do
 			local link = mission_item_links[item]
 			if link then
-				links[#links + 1] = LinkAddIcon(link, select(5, GetItemInfoInstant(item)), 14)
+				links[#links + 1] = LinkAddIcon(link, select(5, C_Item.GetItemInfoInstant(item)), 14)
 			else
 				return
 			end
@@ -66,8 +71,8 @@ local function MissionMonitor_CheckMission(mission, alert_system, message)
 		links[link_count] = nil
 		print(format(message, mission_link, strjoin(", ", unpack(links)) .. (link_count > 1 and " and " or "") .. last_link))
 	end
-	for i, item in ipairs(mission_wanted_items) do
-		local link = select(2, GetItemInfo(item))
+	for _, item in ipairs(mission_wanted_items) do
+		local link = select(2, C_Item.GetItemInfo(item))
 		if link then
 			mission_item_links[item] = link
 		else
@@ -125,13 +130,28 @@ event_frame:RegisterEvent("GARRISON_RANDOM_MISSION_ADDED")
 local addon_loaded
 local followerTypeIDs = {}
 event_frame:SetScript("OnEvent", function(self, event, ...)
-	if (event == "ADDON_LOADED" and addon_name == select(1, ...)) then
-		addon_loaded = 1
-		MissionMonitor_FlushWanted()
-		for _, followerTypeID in ipairs(followerTypeIDs) do
-			MissionMonitor_CheckMissions(followerTypeID)
+	if (event == "ADDON_LOADED") then
+		local addon_name = select(1, ...)
+		if addon_name == MissionMonitorAddonName then
+			addon_loaded = 1
+			MissionMonitor_FlushWanted()
+			for _, followerTypeID in ipairs(followerTypeIDs) do
+				MissionMonitor_CheckMissions(followerTypeID)
+			end
+			followerTypeIDs = nil
+		else
+			local plan_addons = {}
+			plan_addons.MasterPlan = plan_addons.MasterPlan or MasterPlan
+			local plan_addon_api = plan_addons[addon_name]
+			if not plan_addon_api or not plan_addon_api.RegisterMissionPriorityCallback then return end
+			plan_addon_api:RegisterMissionPriorityCallback(
+				"MissionMonitor",
+				"Mission Monitor Wanted Reward",
+				function(missionID)
+					return #(MissionMonitor_MissionGetWantedItems(C_Garrison.GetBasicMissionInfo(missionID))) > 0 and 1023 or 0
+				end
+			)
 		end
-		followerTypeIDs = nil
 	elseif (event == "GARRISON_MISSION_LIST_UPDATE") then
 		local followerTypeID = ...
 		if addon_loaded then
@@ -147,10 +167,10 @@ event_frame:SetScript("OnEvent", function(self, event, ...)
 		local item, success = ...
 		if not item_info_callbacks[item] then return end
 		for _, callback in ipairs(item_info_callbacks[item]) do
-			callback(success, item, GetItemInfo(item))
+			callback(success, item, C_Item.GetItemInfo(item))
 		end
 		item_info_callbacks[item] = nil
-		if not next(item_info_callbacks, nil) then
+		if not next(item_info_callbacks) then
 			self:UnregisterEvent("GET_ITEM_INFO_RECEIVED")
 		end
 	end
@@ -172,10 +192,10 @@ end
 
 local function MissionMonitorListLine_SetEntry(self, entry)
 	local function set_item_link(link)
-		MissionMonitorListLine_SetText(self, LinkAddIcon(link, select(5, GetItemInfoInstant(entry)), 12))
+		MissionMonitorListLine_SetText(self, LinkAddIcon(link, select(5, C_Item.GetItemInfoInstant(entry)), 12))
 		self:Show()
 	end
-	local link = select(2, GetItemInfo(entry))
+	local link = select(2, C_Item.GetItemInfo(entry))
 	if link then
 		set_item_link(link)
 	else
